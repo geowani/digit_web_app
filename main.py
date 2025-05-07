@@ -19,9 +19,8 @@ def descargar_modelo():
     url = f"https://drive.google.com/uc?export=download&id={file_id}"
     ruta = "modelo_mnist.keras"
 
-    # 🚨 Fuerza la descarga cada vez (para depurar)
     if os.path.exists(ruta):
-        os.remove(ruta)
+        os.remove(ruta)  # 🔁 fuerza redescarga cada vez para verificar
 
     print("Descargando modelo desde Google Drive...")
     response = requests.get(url)
@@ -32,6 +31,9 @@ def descargar_modelo():
     print("Modelo descargado.")
 
     return load_model(ruta)
+
+# ⚠️ Se carga inmediatamente al iniciar (importante)
+modelo = descargar_modelo()
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
@@ -63,7 +65,8 @@ async def predecir(file: UploadFile = File(...)):
 
     return {"numero": "".join(digitos)}
 
-# 👇 Este bloque permite que Railway ejecute el servidor correctamente
+# 🔁 Para desarrollo local y compatibilidad con Railway
 if __name__ == "__main__":
+    import uvicorn
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run("main:app", host="0.0.0.0", port=port)
