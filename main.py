@@ -35,13 +35,22 @@ def numero_a_palabras(numero):
     return ' '.join(palabras[int(d)] for d in numero)
 
 def es_par(numero):
-    return int(numero) % 2 == 0
+    try:
+        return int(numero) % 2 == 0
+    except:
+        return False
 
 def factorial_reducido(n):
-    f = 1
-    for i in range(2, int(n)+1):
-        f *= i
-    return f
+    try:
+        n = int(n)
+        if n > 1000:  # Previene desbordamientos
+            return "muy grande"
+        f = 1
+        for i in range(2, n + 1):
+            f *= i
+        return f
+    except:
+        return "indefinido"
 
 def contar_digitos_primos(numero):
     primos = {'2', '3', '5', '7'}
@@ -53,39 +62,39 @@ async def home(request: Request):
 
 @app.post("/analizar")
 async def analizar(file: UploadFile = File(...)):
-    contents = await file.read()
-    img_pil = Image.open(BytesIO(contents)).convert("L")
-    img = np.array(img_pil)
-    img = cv2.bitwise_not(img)
-    _, thresh = cv2.threshold(img, 100, 255, cv2.THRESH_BINARY)
-    contornos, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    contornos = sorted(contornos, key=lambda c: cv2.boundingRect(c)[0])
-
-    digitos = []
-    for c in contornos:
-        x, y, w, h = cv2.boundingRect(c)
-        if w > 5 and h > 5:
-            roi = thresh[y:y+h, x:x+w]
-            roi = cv2.resize(roi, (18, 18))
-            roi = cv2.copyMakeBorder(roi, 5, 5, 5, 5, cv2.BORDER_CONSTANT, value=0)
-            roi = roi.astype("float32") / 255.0
-            roi = np.expand_dims(roi, axis=-1)
-            roi = np.expand_dims(roi, axis=0)
-            pred = modelo.predict(roi, verbose=0)
-            digito = np.argmax(pred)
-            digitos.append(str(digito))
-            numero = ''.join(digitos)
     try:
-        factorial = factorial_reducido(numero)
-    except Exception as e:
-        print(f"❌ Error en factorial: {e}")
-        factorial = "indefinido"
+        contents = await file.read()
+        img_pil = Image.open(BytesIO(contents)).convert("L")
+        img = np.array(img_pil)
+        img = cv2.bitwise_not(img)
+        _, thresh = cv2.threshold(img, 100, 255, cv2.THRESH_BINARY)
+        contornos, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contornos = sorted(contornos, key=lambda c: cv2.boundingRect(c)[0])
 
-    resultado = {
-        "numero": numero,
-        "palabras": numero_a_palabras(numero),
-        "es_par": es_par(numero),
-        "factorial": factorial,
-        "primos": contar_digitos_primos(numero)
-    }
-    return resultado
+        digitos = []
+        for c in contornos:
+            x, y, w, h = cv2.boundingRect(c)
+            if w > 5 and h > 5:
+                roi = thresh[y:y+h, x:x+w]
+                roi = cv2.resize(roi, (18, 18))
+                roi = cv2.copyMakeBorder(roi, 5, 5, 5, 5, cv2.BORDER_CONSTANT, value=0)
+                roi = roi.astype("float32") / 255.0
+                roi = np.expand_dims(roi, axis=-1)
+                roi = np.expand_dims(roi, axis=0)
+                pred = modelo.predict(roi, verbose=0)
+                digito = np.argmax(pred)
+                digitos.append(str(digito))
+
+        numero = ''.join(digitos)
+        resultado = {
+            "numero": numero,
+            "palabras": numero_a_palabras(numero),
+            "es_par": es_par(numero),
+            "factorial": factorial_reducido(numero),
+            "primos": contar_digitos_primos(numero)
+        }
+
+        return resultado
+    except Exception as e:
+        print(f"❌ Error en análisis: {e}")
+        return {"numero": "Error", "palabras": "Error", "es_par": False, "factorial": "Error", "primos": "Error"}
