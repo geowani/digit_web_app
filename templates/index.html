@@ -18,6 +18,11 @@
       font-size: 16px;
       margin-top: 10px;
     }
+    video, canvas, img {
+      max-width: 300px;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+    }
     #resultado {
       margin-top: 20px;
       background: #fff;
@@ -26,53 +31,32 @@
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
       max-width: 500px;
     }
-    #preview {
-      margin-top: 15px;
-      max-width: 250px;
-      border: 1px solid #ccc;
-      padding: 5px;
-      display: none;
-    }
   </style>
+</head>
+<body>
+  <h1>Reconocimiento de Números Manuscritos</h1>
+
+  <!-- Subida manual -->
+  <input type="file" id="imageInput" accept="image/*" onchange="mostrarPrevisualizacion()">
+  <img id="preview" style="display: none;" alt="Vista previa de imagen seleccionada">
+
+  <br><br>
+
+  <!-- Cámara -->
+  <video id="video" autoplay playsinline></video>
+  <br>
+  <button onclick="capturarImagen()">Capturar desde cámara</button>
+  <canvas id="canvas" style="display: none;"></canvas>
+
+  <br><br>
+  <button onclick="enviarImagen()">Procesar Imagen</button>
+
+  <div id="resultado"></div>
+
   <script>
-    async function enviarImagen() {
-      const input = document.getElementById("imageInput");
-      const file = input.files[0];
-      const resultado = document.getElementById("resultado");
+    let imagenParaEnviar = null;
 
-      resultado.innerHTML = "";
-
-      if (!file) {
-        alert("Por favor selecciona una imagen.");
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append("file", file);
-
-      try {
-        const res = await fetch("/analizar", {
-          method: "POST",
-          body: formData
-        });
-
-        if (!res.ok) throw new Error("Error en la respuesta del servidor.");
-
-        const data = await res.json();
-
-        resultado.innerHTML = `
-          <strong>Número detectado:</strong> ${data.numero}<br>
-          <strong>En palabras:</strong> ${data.palabras}<br>
-          <strong>¿Es par?:</strong> ${data.es_par ? "Sí" : "No"}<br>
-          <strong>Factorial:</strong> ${data.factorial}<br>
-          <strong>Dígitos primos:</strong> ${data.digitos_primos}
-        `;
-      } catch (err) {
-        resultado.innerHTML = `<span style="color: red;">Error al procesar la imagen.</span>`;
-        console.error(err);
-      }
-    }
-
+    // Previsualización para carga manual
     function mostrarPrevisualizacion() {
       const input = document.getElementById("imageInput");
       const preview = document.getElementById("preview");
@@ -84,19 +68,66 @@
           preview.style.display = "block";
         };
         reader.readAsDataURL(input.files[0]);
+        imagenParaEnviar = input.files[0];
+      }
+    }
+
+    // Iniciar cámara
+    const video = document.getElementById("video");
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(err => {
+        console.error("❌ Error al acceder a la cámara:", err);
+      });
+
+    // Capturar imagen desde cámara
+    function capturarImagen() {
+      const canvas = document.getElementById("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext("2d").drawImage(video, 0, 0);
+      canvas.toBlob(blob => {
+        imagenParaEnviar = new File([blob], "captura.png", { type: "image/png" });
+      }, "image/png");
+    }
+
+    // Enviar imagen al servidor
+    async function enviarImagen() {
+      const resultado = document.getElementById("resultado");
+      resultado.innerHTML = "";
+
+      if (!imagenParaEnviar) {
+        alert("Primero sube o captura una imagen.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", imagenParaEnviar);
+
+      try {
+        const res = await fetch("/analizar", {
+          method: "POST",
+          body: formData
+        });
+
+        if (!res.ok) throw new Error("Error en el servidor");
+
+        const data = await res.json();
+
+        resultado.innerHTML = `
+          <strong>Número detectado:</strong> ${data.numero}<br>
+          <strong>En palabras:</strong> ${data.palabras}<br>
+          <strong>¿Es par?:</strong> ${data.es_par ? "Sí" : "No"}<br>
+          <strong>Factorial:</strong> ${data.factorial}<br>
+          <strong>Dígitos primos:</strong> ${data.primos}
+        `;
+      } catch (err) {
+        resultado.innerHTML = `<span style="color: red;">Error al procesar la imagen.</span>`;
+        console.error(err);
       }
     }
   </script>
-</head>
-<body>
-  <h1>Reconocimiento de Números Manuscritos</h1>
-  <input type="file" id="imageInput" accept="image/*" onchange="mostrarPrevisualizacion()">
-  <button onclick="enviarImagen()">Procesar</button>
-
-  <div>
-    <img id="preview" alt="Vista previa de la imagen">
-  </div>
-
-  <div id="resultado"></div>
 </body>
 </html>
