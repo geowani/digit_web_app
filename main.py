@@ -74,13 +74,18 @@ async def analizar(file: UploadFile = File(...)):
             pred = modelo.predict(roi, verbose=0)
             digito = np.argmax(pred)
             digitos.append(str(digito))
+            numero = ''.join(digitos)
+    try:
+        factorial = factorial_reducido(numero)
+    except Exception as e:
+        print(f"❌ Error en factorial: {e}")
+        factorial = "indefinido"
 
-    numero = ''.join(digitos)
     resultado = {
-    "numero": numero,
-    "palabras": numero_a_palabras(numero),
-    "es_par": es_par(numero),
-    "factorial": factorial_reducido(numero),
-    "digitos_primos": contar_digitos_primos(numero)  # 🔁 Esto debe coincidir con el nombre en el frontend
-}
+        "numero": numero,
+        "palabras": numero_a_palabras(numero),
+        "es_par": es_par(numero),
+        "factorial": factorial,
+        "primos": contar_digitos_primos(numero)
+    }
     return resultado
