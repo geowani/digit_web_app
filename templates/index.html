@@ -3,11 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <title>Reconocimiento de Número</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+      background: #f7f7f7;
+      color: #333;
+    }
+    h1 {
+      color: #222;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    #resultado {
+      margin-top: 20px;
+      background: #fff;
+      padding: 15px;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      max-width: 500px;
+    }
+  </style>
   <script>
     async function enviarImagen() {
       const input = document.getElementById("imageInput");
       const file = input.files[0];
       const resultado = document.getElementById("resultado");
+
+      resultado.innerHTML = "";
 
       if (!file) {
         alert("Por favor selecciona una imagen.");
@@ -23,6 +49,8 @@
           body: formData
         });
 
+        if (!res.ok) throw new Error("Error en la respuesta del servidor.");
+
         const data = await res.json();
 
         resultado.innerHTML = `
@@ -33,7 +61,7 @@
           <strong>Dígitos primos:</strong> ${data.digitos_primos}
         `;
       } catch (err) {
-        resultado.innerText = "Error al procesar la imagen.";
+        resultado.innerHTML = `<span style="color: red;">Error al procesar la imagen.</span>`;
         console.error(err);
       }
     }
@@ -43,6 +71,6 @@
   <h1>Reconocimiento de Números Manuscritos</h1>
   <input type="file" id="imageInput" accept="image/*">
   <button onclick="enviarImagen()">Procesar</button>
-  <p id="resultado"></p>
+  <div id="resultado"></div>
 </body>
 </html>
