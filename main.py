@@ -19,28 +19,40 @@ def descargar_modelo():
     url = f"https://drive.google.com/uc?export=download&id={file_id}"
     ruta = "modelo_mnist.keras"
 
-    if os.path.exists(ruta):
-        os.remove(ruta)  # 🔁 fuerza redescarga cada vez para verificar
-
-    print("Descargando modelo desde Google Drive...")
-    response = requests.get(url)
-    print(f"🪵 Estado descarga: {response.status_code}")
-    print(f"🪵 Tipo de contenido: {response.headers.get('Content-Type')}")
-    with open(ruta, "wb") as f:
-        f.write(response.content)
-    print("Modelo descargado.")
+    if not os.path.exists(ruta):
+        print("Descargando modelo desde Google Drive...")
+        response = requests.get(url)
+        with open(ruta, "wb") as f:
+            f.write(response.content)
+        print("Modelo descargado.")
 
     return load_model(ruta)
 
-# ⚠️ Se carga inmediatamente al iniciar (importante)
 modelo = descargar_modelo()
+
+def numero_a_palabras(numero):
+    palabras = ["cero", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve"]
+    return ' '.join(palabras[int(d)] for d in numero)
+
+def es_par(numero):
+    return int(numero) % 2 == 0
+
+def factorial_reducido(n):
+    f = 1
+    for i in range(2, int(n)+1):
+        f *= i
+    return f
+
+def contar_digitos_primos(numero):
+    primos = {'2', '3', '5', '7'}
+    return sum(1 for d in numero if d in primos)
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
-@app.post("/predecir")
-async def predecir(file: UploadFile = File(...)):
+@app.post("/analizar")
+async def analizar(file: UploadFile = File(...)):
     contents = await file.read()
     img_pil = Image.open(BytesIO(contents)).convert("L")
     img = np.array(img_pil)
@@ -63,4 +75,12 @@ async def predecir(file: UploadFile = File(...)):
             digito = np.argmax(pred)
             digitos.append(str(digito))
 
-    return {"numero": "".join(digitos)}
+    numero = ''.join(digitos)
+    resultado = {
+    "numero": numero,
+    "palabras": numero_a_palabras(numero),
+    "es_par": es_par(numero),
+    "factorial": factorial_reducido(numero),
+    "digitos_primos": contar_digitos_primos(numero)  # 🔁 Esto debe coincidir con el nombre en el frontend
+}
+    return resultado
