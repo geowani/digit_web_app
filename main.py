@@ -2,17 +2,36 @@ from fastapi import FastAPI, File, UploadFile, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from tensorflow.keras.models import load_model
 import numpy as np
 import cv2
 from PIL import Image
 from io import BytesIO
+import os
+import requests
+from tensorflow.keras.models import load_model
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-modelo = load_model("modelo_mnist.keras")
+def descargar_modelo():
+    file_id = "1LpJ77kovtk_MztVp2y6jbydoa2mcsQLV"
+    url = f"https://drive.google.com/uc?export=download&id={file_id}"
+    ruta = "modelo_mnist.keras"
+
+    if not os.path.exists(ruta):
+        print("Descargando modelo desde Google Drive...")
+        response = requests.get(url)
+        print(f"🪵 Estado descarga: {response.status_code}")
+        print(f"🪵 Tipo de contenido: {response.headers.get('Content-Type')}")
+        with open(ruta, "wb") as f:
+            f.write(response.content)
+        print("Modelo descargado.")
+    else:
+        print("✅ Modelo ya existe localmente.")
+
+    return load_model(ruta)
+
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
@@ -46,7 +65,5 @@ async def predecir(file: UploadFile = File(...)):
 
 # 👇 Este bloque permite que Railway ejecute el servidor correctamente
 if __name__ == "__main__":
-    import uvicorn
-    import os
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run("main:app", host="0.0.0.0", port=port)
