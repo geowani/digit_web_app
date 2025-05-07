@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Reconocimiento de Número</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -13,26 +12,21 @@
       padding: 0;
     }
     .contenedor {
-      max-width: 600px;
-      width: 90%;
-      margin: auto;
-      padding: 20px;
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 30px;
       text-align: center;
     }
     h1 {
       margin-bottom: 20px;
-      font-size: 1.6em;
     }
     input, button {
       padding: 10px;
       font-size: 16px;
-      margin: 10px 0;
-      width: 100%;
-      max-width: 300px;
+      margin-top: 10px;
     }
-    img, canvas, video {
+    #preview, #canvas, #video {
       margin-top: 15px;
-      width: 100%;
       max-width: 300px;
       border: 1px solid #ccc;
       display: none;
@@ -43,12 +37,9 @@
       padding: 15px;
       border-radius: 6px;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-      text-align: left;
-    }
-    @media (max-width: 480px) {
-      h1 {
-        font-size: 1.3em;
-      }
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
     }
   </style>
 </head>
@@ -56,13 +47,13 @@
   <div class="contenedor">
     <h1>Reconocimiento de Números Manuscritos</h1>
 
-    <input type="file" id="imageInput" accept="image/*" onchange="mostrarPrevisualizacion()">
-    <img id="preview" alt="Vista previa de la imagen">
+    <input type="file" id="imageInput" accept="image/*" onchange="mostrarPrevisualizacion()"><br>
+    <img id="preview" alt="Vista previa de la imagen"><br>
 
-    <video id="video" autoplay muted></video>
-    <button onclick="iniciarCamara()">📷 Capturar desde cámara</button>
+    <video id="video" autoplay></video><br>
+    <button onclick="iniciarCamara()">📷 Capturar desde cámara</button><br>
 
-    <canvas id="canvas"></canvas>
+    <canvas id="canvas"></canvas><br>
     <button onclick="procesarImagen()">🧠 Procesar Imagen</button>
 
     <div id="resultado"></div>
@@ -88,30 +79,16 @@
     }
 
     function iniciarCamara() {
-  navigator.mediaDevices.getUserMedia({
-    video: {
-      facingMode: { exact: "environment" }  // 👈 fuerza cámara trasera
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+          video.srcObject = stream;
+          video.style.display = "block";
+          canvas.style.display = "block";
+          preview.style.display = "none";
+        })
+        .catch(err => alert("No se pudo acceder a la cámara."));
     }
-  })
-  .then(stream => {
-    video.srcObject = stream;
-    video.style.display = "block";
-    canvas.style.display = "block";
-    preview.style.display = "none";
-  })
-  .catch(err => {
-    console.warn("No se pudo acceder a la cámara trasera, usando predeterminada.");
-    // fallback a la cámara predeterminada
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => {
-        video.srcObject = stream;
-        video.style.display = "block";
-        canvas.style.display = "block";
-        preview.style.display = "none";
-      })
-      .catch(error => alert("❌ No se pudo acceder a ninguna cámara."));
-  });
-}
+
     function capturarFrame() {
       const ctx = canvas.getContext("2d");
       canvas.width = video.videoWidth;
@@ -151,7 +128,7 @@
           <strong>En palabras:</strong> ${data.palabras}<br>
           <strong>¿Es par?:</strong> ${data.es_par ? "Sí" : "No"}<br>
           <strong>Factorial:</strong> ${data.factorial}<br>
-          <strong>Dígitos primos:</strong> ${data.primos}
+          <strong>Dígitos primos:</strong> ${data.digitos_primos}
         `;
       } catch (err) {
         resultado.innerHTML = `<span style="color:red;">❌ Error al procesar la imagen.</span>`;
