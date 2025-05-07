@@ -4,3 +4,4 @@ jinja2
 tensorflow
 opencv-python-headless
 pillow
+python-multipart
