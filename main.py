@@ -43,3 +43,10 @@ async def predecir(file: UploadFile = File(...)):
             digitos.append(str(digito))
 
     return {"numero": "".join(digitos)}
+
+# 👇 Este bloque permite que Railway ejecute el servidor correctamente
+if __name__ == "__main__":
+    import uvicorn
+    import os
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
