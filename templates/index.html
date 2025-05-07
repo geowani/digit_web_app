@@ -88,16 +88,30 @@
     }
 
     function iniciarCamara() {
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then(stream => {
-          video.srcObject = stream;
-          video.style.display = "block";
-          canvas.style.display = "block";
-          preview.style.display = "none";
-        })
-        .catch(err => alert("No se pudo acceder a la cámara."));
+  navigator.mediaDevices.getUserMedia({
+    video: {
+      facingMode: { exact: "environment" }  // 👈 fuerza cámara trasera
     }
-
+  })
+  .then(stream => {
+    video.srcObject = stream;
+    video.style.display = "block";
+    canvas.style.display = "block";
+    preview.style.display = "none";
+  })
+  .catch(err => {
+    console.warn("No se pudo acceder a la cámara trasera, usando predeterminada.");
+    // fallback a la cámara predeterminada
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+        video.style.display = "block";
+        canvas.style.display = "block";
+        preview.style.display = "none";
+      })
+      .catch(error => alert("❌ No se pudo acceder a ninguna cámara."));
+  });
+}
     function capturarFrame() {
       const ctx = canvas.getContext("2d");
       canvas.width = video.videoWidth;
