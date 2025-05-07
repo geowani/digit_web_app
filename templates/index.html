@@ -3,7 +3,41 @@
 <head>
   <meta charset="UTF-8">
   <title>Reconocimiento de Número</title>
-  <script src="/static/script.js" defer></script>
+  <script>
+    async function enviarImagen() {
+      const input = document.getElementById("imageInput");
+      const file = input.files[0];
+      const resultado = document.getElementById("resultado");
+
+      if (!file) {
+        alert("Por favor selecciona una imagen.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const res = await fetch("/analizar", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await res.json();
+
+        resultado.innerHTML = `
+          <strong>Número detectado:</strong> ${data.numero}<br>
+          <strong>En palabras:</strong> ${data.palabras}<br>
+          <strong>¿Es par?:</strong> ${data.es_par ? "Sí" : "No"}<br>
+          <strong>Factorial:</strong> ${data.factorial}<br>
+          <strong>Dígitos primos:</strong> ${data.digitos_primos}
+        `;
+      } catch (err) {
+        resultado.innerText = "Error al procesar la imagen.";
+        console.error(err);
+      }
+    }
+  </script>
 </head>
 <body>
   <h1>Reconocimiento de Números Manuscritos</h1>
