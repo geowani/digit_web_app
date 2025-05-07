@@ -1,9 +1,8 @@
 fastapi
-uvicorn
+uvicorn[standard]
 jinja2
-tensorflow
+tensorflow>=2.12
 opencv-python-headless
 pillow
 python-multipart
 requests
-
