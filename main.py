@@ -8,6 +8,7 @@ from PIL import Image
 from io import BytesIO
 import os
 import requests
+import math
 from tensorflow.keras.models import load_model
 
 app = FastAPI()
@@ -43,12 +44,15 @@ def es_par(numero):
 def factorial_reducido(n):
     try:
         n = int(n)
-        if n > 1000:  # Previene desbordamientos
-            return "muy grande"
-        f = 1
-        for i in range(2, n + 1):
-            f *= i
-        return f
+        if n < 0:
+            return "no válido"
+        result = math.factorial(n)
+        result_str = str(result)
+        if len(result_str) > 10:
+            principal = result_str[:10]
+            exponente = len(result_str) - 1
+            return f"{principal}e+{exponente}"
+        return result_str
     except:
         return "indefinido"
 
@@ -91,10 +95,16 @@ async def analizar(file: UploadFile = File(...)):
             "palabras": numero_a_palabras(numero),
             "es_par": es_par(numero),
             "factorial": factorial_reducido(numero),
-            "primos": contar_digitos_primos(numero)
+            "digitos_primos": contar_digitos_primos(numero)
         }
 
         return resultado
     except Exception as e:
         print(f"❌ Error en análisis: {e}")
-        return {"numero": "Error", "palabras": "Error", "es_par": False, "factorial": "Error", "primos": "Error"}
+        return {
+            "numero": "Error",
+            "palabras": "Error",
+            "es_par": False,
+            "factorial": "Error",
+            "digitos_primos": "Error"
+        }
