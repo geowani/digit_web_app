@@ -19,19 +19,19 @@ def descargar_modelo():
     url = f"https://drive.google.com/uc?export=download&id={file_id}"
     ruta = "modelo_mnist.keras"
 
-    if not os.path.exists(ruta):
-        print("Descargando modelo desde Google Drive...")
-        response = requests.get(url)
-        print(f"🪵 Estado descarga: {response.status_code}")
-        print(f"🪵 Tipo de contenido: {response.headers.get('Content-Type')}")
-        with open(ruta, "wb") as f:
-            f.write(response.content)
-        print("Modelo descargado.")
-    else:
-        print("✅ Modelo ya existe localmente.")
+    # 🚨 Fuerza la descarga cada vez (para depurar)
+    if os.path.exists(ruta):
+        os.remove(ruta)
+
+    print("Descargando modelo desde Google Drive...")
+    response = requests.get(url)
+    print(f"🪵 Estado descarga: {response.status_code}")
+    print(f"🪵 Tipo de contenido: {response.headers.get('Content-Type')}")
+    with open(ruta, "wb") as f:
+        f.write(response.content)
+    print("Modelo descargado.")
 
     return load_model(ruta)
-
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
