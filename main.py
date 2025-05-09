@@ -10,6 +10,8 @@ import os
 import requests
 import math
 from tensorflow.keras.models import load_model
+import mysql.connector
+from mysql.connector import Error
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -89,22 +91,42 @@ async def analizar(file: UploadFile = File(...)):
                 digito = np.argmax(pred)
                 digitos.append(str(digito))
 
-        numero = ''.join(digitos)
-        resultado = {
-            "numero": numero,
-            "palabras": numero_a_palabras(numero),
-            "es_par": es_par(numero),
-            "factorial": factorial_reducido(numero),
-            "digitos_primos": contar_digitos_primos(numero)
-        }
+numero = ''.join(digitos)
+fact = factorial_reducido(numero)
 
-        return resultado
-    except Exception as e:
-        print(f"❌ Error en análisis: {e}")
-        return {
-            "numero": "Error",
-            "palabras": "Error",
-            "es_par": False,
-            "factorial": "Error",
-            "digitos_primos": "Error"
-        }
+# Guardar en la base de datos
+guardar_en_bd(numero, fact)
+
+resultado = {
+    "numero": numero,
+    "palabras": numero_a_palabras(numero),
+    "es_par": es_par(numero),
+    "factorial": fact,
+    "digitos_primos": contar_digitos_primos(numero)
+}
+
+
+    
+def guardar_en_bd(numero_detectado: str, factorial: str):
+    try:
+        conn = mysql.connector.connect(
+            host="www.server.daossystem.pro",
+            port=3301,
+            database="bd_ia_lf_2025",
+            user="usr_ia_lf_2025",
+            password="5sr_31_lf_2025"
+        )
+        if conn.is_connected():
+            cursor = conn.cursor()
+            query = """
+                INSERT INTO segundo_parcial (valor, factorial, nombre_estudiante)
+                VALUES (%s, %s, %s)
+            """
+            cursor.execute(query, (numero_detectado, factorial, "Lester Estrada"))
+            conn.commit()
+            cursor.close()
+            conn.close()
+            print("✅ Información enviada a la base de datos.")
+    except Error as e:
+        print("❌ Error al guardar información en la base de datos:", e)
+
