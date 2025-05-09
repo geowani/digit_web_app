@@ -6,3 +6,4 @@ opencv-python-headless
 pillow
 python-multipart
 requests
+mysql-connector-python
