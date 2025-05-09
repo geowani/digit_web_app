@@ -91,20 +91,31 @@ async def analizar(file: UploadFile = File(...)):
                 digito = np.argmax(pred)
                 digitos.append(str(digito))
 
-numero = ''.join(digitos)
-fact = factorial_reducido(numero)
+        numero = ''.join(digitos)
+        fact = factorial_reducido(numero)
 
-# Guardar en la base de datos
-guardar_en_bd(numero, fact)
+        # Guardar en la base de datos
+        guardar_en_bd(numero, fact)
 
-resultado = {
-    "numero": numero,
-    "palabras": numero_a_palabras(numero),
-    "es_par": es_par(numero),
-    "factorial": fact,
-    "digitos_primos": contar_digitos_primos(numero)
-}
+        resultado = {
+            "numero": numero,
+            "palabras": numero_a_palabras(numero),
+            "es_par": es_par(numero),
+            "factorial": fact,
+            "digitos_primos": contar_digitos_primos(numero)
+        }
 
+        return resultado
+
+    except Exception as e:
+        print(f"❌ Error en análisis: {e}")
+        return {
+            "numero": "Error",
+            "palabras": "Error",
+            "es_par": False,
+            "factorial": "Error",
+            "digitos_primos": "Error"
+        }
 
     
 def guardar_en_bd(numero_detectado: str, factorial: str):
