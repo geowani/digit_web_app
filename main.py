@@ -94,15 +94,21 @@ async def analizar(file: UploadFile = File(...)):
         numero = ''.join(digitos)
         fact = factorial_reducido(numero)
 
-        # Guardar en la base de datos
-        guardar_en_bd(numero, fact)
+        # Intentar guardar en la base de datos
+        mensaje_bd = "Los datos fueron enviados correctamente a la base de datos."
+        try:
+            guardar_en_bd(numero, fact)
+        except Exception as e:
+            print(f"❌ Error al guardar en BD: {e}")
+            mensaje_bd = "Hubo un error al enviar los datos a la base."
 
         resultado = {
             "numero": numero,
             "palabras": numero_a_palabras(numero),
             "es_par": es_par(numero),
             "factorial": fact,
-            "digitos_primos": contar_digitos_primos(numero)
+            "digitos_primos": contar_digitos_primos(numero),
+            "mensaje_bd": mensaje_bd
         }
 
         return resultado
@@ -114,7 +120,8 @@ async def analizar(file: UploadFile = File(...)):
             "palabras": "Error",
             "es_par": False,
             "factorial": "Error",
-            "digitos_primos": "Error"
+            "digitos_primos": "Error",
+            "mensaje_bd": "Hubo un error interno en el análisis."
         }
 
     
